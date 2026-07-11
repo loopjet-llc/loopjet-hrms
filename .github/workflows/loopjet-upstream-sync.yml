@@ -1,0 +1,33 @@
+name: Loopjet upstream sync
+
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upstream-sync-version-16
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: version-16
+      - name: Merge upstream
+        env:
+          UPSTREAM_REPOSITORY: frappe/hrms
+          UPSTREAM_BRANCH: version-16
+        run: |
+          git config user.name "loopjet-upstream-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream "https://github.com/$UPSTREAM_REPOSITORY.git"
+          git fetch upstream "$UPSTREAM_BRANCH" --tags
+          git merge --no-edit "upstream/$UPSTREAM_BRANCH"
+          git push origin "$UPSTREAM_BRANCH" --follow-tags
